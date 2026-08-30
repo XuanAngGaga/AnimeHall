@@ -10,11 +10,13 @@ function setupSocket(io) {
   }
 
   function isBanned(roomId, userId) {
-    return getDb().prepare('SELECT 1 FROM room_bans WHERE room_id = ? AND user_id = ?').get(roomId, userId) !== undefined;
+    const rows = getDb().prepare('SELECT user_id FROM room_bans WHERE room_id = ? AND user_id = ?').all(roomId, userId);
+    return rows.length > 0;
   }
 
   function isMuted(roomId, userId) {
-    return getDb().prepare('SELECT 1 FROM room_mutes WHERE room_id = ? AND user_id = ?').get(roomId, userId) !== undefined;
+    const rows = getDb().prepare('SELECT user_id FROM room_mutes WHERE room_id = ? AND user_id = ?').all(roomId, userId);
+    return rows.length > 0;
   }
 
   function getRoom(roomId) {
@@ -51,6 +53,8 @@ function setupSocket(io) {
       }
 
       socket.join(roomId);
+      socket.data.userId = userId;
+      socket.data.roomId = roomId;
       onlineUsers.set(socket.id, { userId, username, roomId });
 
       const existing = getDb().prepare('SELECT * FROM room_members WHERE room_id = ? AND user_id = ?').get(roomId, userId);

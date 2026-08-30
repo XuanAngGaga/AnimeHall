@@ -68,7 +68,7 @@ function isOwner(room, req) {
 }
 
 // Ban user (owner only)
-router.post('/:id/ban', authMiddleware, (req, res) => {
+router.post('/:id/ban', authMiddleware, async (req, res) => {
   const room = getDb().prepare('SELECT * FROM rooms WHERE id = ?').get(req.params.id);
   if (!isOwner(room, req)) return res.status(403).json({ error: '仅房主可操作' });
   const { userId } = req.body;
@@ -77,7 +77,18 @@ router.post('/:id/ban', authMiddleware, (req, res) => {
     .run(uuidv4(), req.params.id, userId, req.user.id);
   getDb().prepare('DELETE FROM room_members WHERE room_id = ? AND user_id = ?').run(req.params.id, userId);
   const io = req.app.get('io');
-  if (io) io.to(req.params.id).emit('room:user-banned', { roomId: req.params.id, userId });
+  if (io) {
+    io.to(req.params.id).emit('room:user-banned', { roomId: req.params.id, userId });
+    // 强制断开被封禁用户的 socket，防止其继续在房间内操作
+    try {
+      const sockets = await io.in(req.params.id).fetchSockets();
+      for (const s of sockets) {
+        if (s.data.userId === userId) {
+          s.disconnect(true);
+        }
+      }
+    } catch (e) {}
+  }
   res.json({ success: true });
 });
 
@@ -87,6 +98,8 @@ router.post('/:id/unban', authMiddleware, (req, res) => {
   if (!isOwner(room, req)) return res.status(403).json({ error: '仅房主可操作' });
   const { userId } = req.body;
   getDb().prepare('DELETE FROM room_bans WHERE room_id = ? AND user_id = ?').run(req.params.id, userId);
+  const io = req.app.get('io');
+  if (io) io.to(req.params.id).emit('room:user-unbanned', { roomId: req.params.id, userId });
   res.json({ success: true });
 });
 
@@ -109,6 +122,8 @@ router.post('/:id/unmute', authMiddleware, (req, res) => {
   if (!isOwner(room, req)) return res.status(403).json({ error: '仅房主可操作' });
   const { userId } = req.body;
   getDb().prepare('DELETE FROM room_mutes WHERE room_id = ? AND user_id = ?').run(req.params.id, userId);
+  const io = req.app.get('io');
+  if (io) io.to(req.params.id).emit('room:user-unmuted', { roomId: req.params.id, userId });
   res.json({ success: true });
 });
 

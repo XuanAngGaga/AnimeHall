@@ -66,11 +66,23 @@ export default function Room() {
     const handleMuted = ({ userId }) => {
       setMutedUsers((prev) => [...new Set([...prev, userId])]);
     };
+    const handleUnmuted = ({ userId }) => {
+      setMutedUsers((prev) => prev.filter((id) => id !== userId));
+    };
+    const handleUnbanned = ({ userId }) => {
+      setBannedUsers((prev) => prev.filter((id) => id !== userId));
+    };
     const handleKicked = ({ userId }) => {
       if (userId === user?.id) {
         leaveRoom(roomId);
         navigate('/', { replace: true });
       }
+    };
+    const handleRoomError = ({ error }) => {
+      // 加入房间被拒绝（如被封禁）
+      alert(error);
+      leaveRoom(roomId);
+      navigate('/', { replace: true });
     };
     const handlePermissions = ({ allowPauseAll: p, allowRateAll: r }) => {
       if (p !== undefined) setAllowPauseAll(p);
@@ -86,9 +98,12 @@ export default function Room() {
       on('room:deleted', handleRoomDeleted),
       on('room:user-banned', handleBanned),
       on('room:user-muted', handleMuted),
+      on('room:user-unmuted', handleUnmuted),
+      on('room:user-unbanned', handleUnbanned),
       on('room:permissions', handlePermissions),
       on('room:kicked', handleKicked),
       on('room:anime-changed', handleAnimeChanged),
+      on('room:error', handleRoomError),
     ];
     return () => unsubs.forEach((fn) => fn());
   }, [socket, on, roomId, leaveRoom, navigate, user]);
