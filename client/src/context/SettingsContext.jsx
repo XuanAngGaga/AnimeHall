@@ -12,6 +12,7 @@ export function SettingsProvider({ children }) {
     home_title: '一起同步看番',
     home_subtitle: '创建房间，邀请朋友，同步观看动漫',
     allow_video_upload: '1',
+    socket_transport: 'polling',
   });
 
   const applySettings = useCallback((s) => {

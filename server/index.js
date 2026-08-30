@@ -66,13 +66,13 @@ async function main() {
   if (!existingAdmin) {
     const hashed = bcrypt.hashSync('admin123', 10);
     db.prepare('INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)').run(
-      uuidv4(), 'XuanAng', hashed, 'admin'
+      uuidv4(), 'admin', hashed, 'admin'
     );
-    console.log('Default admin created: XuanAng / admin123');
-  } else if (existingAdmin.username === 'admin') {
-    // Migrate old admin username to XuanAng
-    db.prepare('UPDATE users SET username = ? WHERE id = ?').run('XuanAng', existingAdmin.id);
-    console.log('Admin username migrated: admin → XuanAng');
+    console.log('Default admin created: admin / admin123');
+  } else if (existingAdmin.username === 'XuanAng') {
+    // Migrate old admin username to admin
+    db.prepare('UPDATE users SET username = ? WHERE id = ?').run('admin', existingAdmin.id);
+    console.log('Admin username migrated: XuanAng → admin');
   }
 
   const PORT = process.env.PORT || 3001;

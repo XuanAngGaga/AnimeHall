@@ -265,6 +265,7 @@ async function initDb() {
     smtp_secure: '1',
     smtp_from: '',
     smtp_proxy: '',
+    socket_transport: 'polling',
   };
   for (const [k, v] of Object.entries(defaults)) {
     try {

@@ -59,7 +59,7 @@ router.get('/', (req, res) => {
 
 // 管理员修改站点设置
 router.put('/', adminMiddleware, (req, res) => {
-  const allowed = ['site_name', 'site_icon', 'site_background', 'blur_amount', 'home_title', 'home_subtitle', 'allow_video_upload', 'require_invite_code', 'require_email_verify', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_secure', 'smtp_from', 'smtp_proxy'];
+  const allowed = ['site_name', 'site_icon', 'site_background', 'blur_amount', 'home_title', 'home_subtitle', 'allow_video_upload', 'require_invite_code', 'require_email_verify', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_secure', 'smtp_from', 'smtp_proxy', 'socket_transport'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       getDb().prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')

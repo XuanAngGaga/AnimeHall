@@ -36,6 +36,7 @@ export default function Admin() {
   const [smtpSecure, setSmtpSecure] = useState('1');
   const [smtpFrom, setSmtpFrom] = useState('');
   const [smtpProxy, setSmtpProxy] = useState('');
+  const [socketTransport, setSocketTransport] = useState('polling');
   const [settingsMsg, setSettingsMsg] = useState('');
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function Admin() {
       setSmtpSecure(settings.smtp_secure !== undefined ? settings.smtp_secure : '1');
       setSmtpFrom(settings.smtp_from || '');
       setSmtpProxy(settings.smtp_proxy || '');
+      setSocketTransport(settings.socket_transport || 'polling');
     }
   }, [settings]);
 
@@ -79,6 +81,7 @@ export default function Admin() {
         smtp_secure: smtpSecure,
         smtp_from: smtpFrom,
         smtp_proxy: smtpProxy,
+        socket_transport: socketTransport,
       });
       setSettingsMsg('设置已保存');
     } catch (err) {
@@ -617,6 +620,32 @@ export default function Admin() {
                       <input value={smtpProxy} onChange={(e) => setSmtpProxy(e.target.value)} className="input-field" placeholder="http://host:port 或 http://user:pass@host:port" autoComplete="off" />
                       <p className="text-xs text-gray-500 mt-1">通过 HTTP CONNECT 代理转发 SMTP 请求，隐藏源站 IP。留空则不使用代理。</p>
                     </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-dark-600 pt-4">
+                  <h3 className="font-semibold text-sm mb-3">实时连接设置</h3>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-1 block">Socket 传输方式</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSocketTransport('polling')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium ${socketTransport === 'polling' ? 'bg-primary-600 text-white' : 'bg-dark-600 text-gray-400'}`}
+                      >
+                        Polling（HTTP 长轮询）
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSocketTransport('websocket')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium ${socketTransport === 'websocket' ? 'bg-primary-600 text-white' : 'bg-dark-600 text-gray-400'}`}
+                      >
+                        WebSocket
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Polling 兼容所有 CDN，稳定但延迟略高；WebSocket 延迟低，但需要 CDN/代理支持 WebSocket 升级（否则会回退到 Polling）。
+                    </p>
                   </div>
                 </div>
 

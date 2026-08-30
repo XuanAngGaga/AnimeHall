@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useSettings } from './SettingsContext';
 
 const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const socketRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const [currentRoom, setCurrentRoom] = useState(null);
@@ -18,8 +20,10 @@ export function SocketProvider({ children }) {
   const currentRoomRef = useRef(null);
 
   useEffect(() => {
-    // 外网 CDN 环境可能不转发 WebSocket 升级，改用 HTTP 长轮询(polling)保证稳定
-    const socket = io('/', { transports: ['polling'] });
+    // 根据后台配置选择传输方式：polling（默认，CDN 兼容）或 websocket（优先，失败回退 polling）
+    const transport = settings.socket_transport || 'polling';
+    const transports = transport === 'websocket' ? ['websocket', 'polling'] : ['polling'];
+    const socket = io('/', { transports });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -35,7 +39,7 @@ export function SocketProvider({ children }) {
     socket.on('disconnect', () => setConnected(false));
 
     return () => { socket.disconnect(); };
-  }, []);
+  }, [settings.socket_transport]);
 
   const joinRoom = useCallback((roomId) => {
     const u = lastUserRef.current;
